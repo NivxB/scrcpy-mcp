@@ -64,11 +64,11 @@ Get a working MCP server with ADB-based functionality first. This provides immed
 
 ### 1.7 Build and Test
 
-- [ ] 1.7.1 Run `npm run build` to compile TypeScript
-- [ ] 1.7.2 Test with MCP Inspector: `npx @modelcontextprotocol/inspector node dist/index.js`
-- [ ] 1.7.3 Verify `device_list` works
-- [ ] 1.7.4 Verify `screenshot` returns valid image
-- [ ] 1.7.5 Verify `tap` works on connected device
+- [x] 1.7.1 Run `npm run build` to compile TypeScript
+- [x] 1.7.2 Test with MCP Inspector: `npx @modelcontextprotocol/inspector node dist/index.js`
+- [x] 1.7.3 Verify `device_list` works
+- [x] 1.7.4 Verify `screenshot` returns valid image
+- [x] 1.7.5 Verify `tap` works on connected device
 
 **Phase 1 Milestone:** Working MCP server with ADB-based device listing, screenshots, and input.
 
@@ -269,6 +269,33 @@ Prepare for distribution.
 - [ ] 5.5.2 Submit to smithery.ai
 
 **Phase 5 Milestone:** Published on npm, installable via `npx scrcpy-mcp`.
+
+---
+
+## Phase 6: Future Features (Post-Release)
+
+Features to consider after initial release based on user feedback.
+
+### 6.1 Live Video Streaming
+
+Enable watching the device screen in real-time while MCP controls it.
+
+- [ ] 6.1.1 Implement `start_video_stream` tool - connect to scrcpy video socket
+- [ ] 6.1.2 Pipe H.264 stream to ffmpeg for decoding
+- [ ] 6.1.3 Option A: Launch ffplay window for local viewing
+- [ ] 6.1.4 Option B: HTTP MJPEG server for browser-based viewer
+- [ ] 6.1.5 Option C: WebSocket streaming for integration with other tools
+- [ ] 6.1.6 Allow simultaneous control + viewing (video socket is separate from control socket)
+
+**Use cases:**
+- Debug automation visually while it runs
+- Live demos of AI-controlled device interactions
+- Integration with existing scrcpy GUI (`scrcpy --serial <device>` alongside MCP)
+
+**Technical notes:**
+- Video socket sends raw H.264 (needs decoding unlike screenshots)
+- Can run alongside existing control socket connection
+- Alternative: Users can run scrcpy GUI separately on same forwarded port
 
 ---
 
