@@ -30,11 +30,11 @@ Get a working MCP server with ADB-based functionality first. This provides immed
 
 ### 1.3 Entry Point (`src/index.ts`)
 
-- [ ] 1.3.1 Import McpServer and StdioServerTransport from SDK
-- [ ] 1.3.2 Create server instance with name and version
-- [ ] 1.3.3 Import and register tool modules (initially just device tools)
-- [ ] 1.3.4 Connect StdioServerTransport and start server
-- [ ] 1.3.5 Add error handling and stderr logging
+- [x] 1.3.1 Import McpServer and StdioServerTransport from SDK
+- [x] 1.3.2 Create server instance with name and version
+- [x] 1.3.3 Import and register tool modules (initially just device tools)
+- [x] 1.3.4 Connect StdioServerTransport and start server
+- [x] 1.3.5 Add error handling and stderr logging
 
 ### 1.4 Device Tools - ADB Fallback (`src/tools/device.ts`)
 
