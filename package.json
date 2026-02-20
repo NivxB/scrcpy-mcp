@@ -1,0 +1,47 @@
+{
+  "name": "scrcpy-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Android device control via ADB and scrcpy — gives AI agents vision and control over Android devices",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "android",
+    "adb",
+    "scrcpy",
+    "model-context-protocol",
+    "ai",
+    "automation",
+    "mobile",
+    "screen-control"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "scrcpy-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6"
+  }
+}
