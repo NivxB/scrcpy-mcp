@@ -3,6 +3,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerDeviceTools } from "./tools/device.js";
+import { registerVisionTools } from "./tools/vision.js";
 
 const server = new McpServer({
   name: "scrcpy-mcp",
@@ -10,6 +11,7 @@ const server = new McpServer({
 });
 
 registerDeviceTools(server);
+registerVisionTools(server);
 
 async function main() {
   const transport = new StdioServerTransport();

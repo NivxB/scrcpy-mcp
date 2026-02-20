@@ -48,9 +48,9 @@ Get a working MCP server with ADB-based functionality first. This provides immed
 
 ### 1.5 Vision Tools - ADB Fallback (`src/tools/vision.ts`)
 
-- [ ] 1.5.1 Implement `screenshot` - ADB `exec-out screencap -p`, return base64 image
-- [ ] 1.5.2 Implement `screen_record_start` - spawn `screenrecord` in background
-- [ ] 1.5.3 Implement `screen_record_stop` - kill screenrecord process
+- [x] 1.5.1 Implement `screenshot` - ADB `exec-out screencap -p`, return base64 image
+- [x] 1.5.2 Implement `screen_record_start` - spawn `screenrecord` in background
+- [x] 1.5.3 Implement `screen_record_stop` - kill screenrecord process
 
 ### 1.6 Input Tools - ADB Fallback (`src/tools/input.ts`)
 
