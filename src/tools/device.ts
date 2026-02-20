@@ -181,7 +181,7 @@ export function registerDeviceTools(server: McpServer) {
       } catch (error) {
         const err = error as Error;
         return {
-          content: [{ type: "text", text: `Failed to disconnect from ${address}: ${err.message}` }],
+          content: [{ type: "text", text: JSON.stringify({ error: true, message: `Failed to disconnect from ${address}: ${err.message}` }) }],
         };
       }
     }
