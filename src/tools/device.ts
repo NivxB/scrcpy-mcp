@@ -110,6 +110,7 @@ export function registerDeviceTools(server: McpServer) {
       inputSchema: {
         port: z
           .number()
+          .int()
           .optional()
           .default(5555)
           .describe("TCP port for ADB connection (default: 5555)"),
