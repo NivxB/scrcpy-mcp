@@ -63,7 +63,7 @@ export function registerVisionTools(server: McpServer) {
       }
 
       const args = ["-s", s, "shell", "screenrecord"];
-      if (duration) {
+      if (duration !== undefined) {
         args.push("--time-limit", String(duration));
       }
       args.push(remotePath);
@@ -125,23 +125,34 @@ export function registerVisionTools(server: McpServer) {
       
       proc.kill("SIGINT");
       
-      await new Promise<void>((resolve) => {
-        proc.once("close", () => resolve());
-        setTimeout(() => resolve(), 2000);
-      });
+      await Promise.race([
+        new Promise<void>((resolve) => proc.once("close", () => resolve())),
+        new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+      ]);
 
       if (pullToHost) {
         const targetPath = localPath || `./recording-${s}.mp4`;
-        await execAdb(["-s", s, "pull", remotePath, targetPath]);
-        
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Recording stopped and saved to ${targetPath}`,
-            },
-          ],
-        };
+        try {
+          await execAdb(["-s", s, "pull", remotePath, targetPath]);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Recording stopped and saved to ${targetPath}`,
+              },
+            ],
+          };
+        } catch (error) {
+          const err = error as Error;
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Failed to pull recording from ${remotePath} to ${targetPath}: ${err.message}`,
+              },
+            ],
+          };
+        }
       }
 
       return {

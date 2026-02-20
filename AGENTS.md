@@ -35,7 +35,7 @@ npx tsc --noEmit
 
 ## Project Structure
 
-```
+```text
 src/
 ├── index.ts           # Entry point, server setup, tool registration
 ├── utils/
@@ -90,7 +90,7 @@ type Keycode = string | number;
 - **Variables/functions:** camelCase (`execAdb`, `resolveSerial`)
 - **Interfaces/types:** PascalCase (`DeviceInfo`, `ExecResult`)
 - **Constants:** UPPER_SNAKE_CASE for true constants (`KEYCODE_MAP`, `DEFAULT_TIMEOUT`)
-- **Files:** lowercase with underscores (`device.ts`, `adb.ts`)
+- **Files:** lowercase filenames (`device.ts`, `adb.ts`)
 - **Tool names:** snake_case (`device_list`, `screen_on`)
 
 ### Function Style
