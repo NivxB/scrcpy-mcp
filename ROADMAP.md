@@ -54,13 +54,13 @@ Get a working MCP server with ADB-based functionality first. This provides immed
 
 ### 1.6 Input Tools - ADB Fallback (`src/tools/input.ts`)
 
-- [ ] 1.6.1 Implement `tap` - ADB `input tap x y`
-- [ ] 1.6.2 Implement `swipe` - ADB `input swipe x1 y1 x2 y2 duration`
-- [ ] 1.6.3 Implement `long_press` - ADB `input swipe x y x y duration`
-- [ ] 1.6.4 Implement `drag_drop` - ADB `input draganddrop`
-- [ ] 1.6.5 Implement `input_text` - ADB `input text` with shell escaping
-- [ ] 1.6.6 Implement `key_event` - ADB `input keyevent` with keycode map
-- [ ] 1.6.7 Implement `scroll` - ADB `input swipe` with small delta (fallback only)
+- [x] 1.6.1 Implement `tap` - ADB `input tap x y`
+- [x] 1.6.2 Implement `swipe` - ADB `input swipe x1 y1 x2 y2 duration`
+- [x] 1.6.3 Implement `long_press` - ADB `input swipe x y x y duration`
+- [x] 1.6.4 Implement `drag_drop` - ADB `input draganddrop`
+- [x] 1.6.5 Implement `input_text` - ADB `input text` with shell escaping
+- [x] 1.6.6 Implement `key_event` - ADB `input keyevent` with keycode map
+- [x] 1.6.7 Implement `scroll` - ADB `input swipe` with small delta (fallback only)
 
 ### 1.7 Build and Test
 
