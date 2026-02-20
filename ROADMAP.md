@@ -20,13 +20,13 @@ Get a working MCP server with ADB-based functionality first. This provides immed
 
 ### 1.2 ADB Utility Layer (`src/utils/adb.ts`)
 
-- [ ] 1.2.1 Create `execAdb()` function - spawn adb with args, return stdout/stderr
-- [ ] 1.2.2 Create `execAdbShell()` wrapper for `adb -s <serial> shell <command>`
-- [ ] 1.2.3 Create `execAdbRaw()` for binary output (screenshots)
-- [ ] 1.2.4 Create `resolveSerial()` - auto-detect single device, error on multiple
-- [ ] 1.2.5 Create `getDevices()` - parse `adb devices -l` output
-- [ ] 1.2.6 Create `getScreenSize()` - parse `adb shell wm size`
-- [ ] 1.2.7 Add environment variable support: `ADB_PATH`, `ANDROID_SERIAL`
+- [x] 1.2.1 Create `execAdb()` function - spawn adb with args, return stdout/stderr
+- [x] 1.2.2 Create `execAdbShell()` wrapper for `adb -s <serial> shell <command>`
+- [x] 1.2.3 Create `execAdbRaw()` for binary output (screenshots)
+- [x] 1.2.4 Create `resolveSerial()` - auto-detect single device, error on multiple
+- [x] 1.2.5 Create `getDevices()` - parse `adb devices -l` output
+- [x] 1.2.6 Create `getScreenSize()` - parse `adb shell wm size`
+- [x] 1.2.7 Add environment variable support: `ADB_PATH`, `ANDROID_SERIAL`
 
 ### 1.3 Entry Point (`src/index.ts`)
 
