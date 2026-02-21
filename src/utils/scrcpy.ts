@@ -22,19 +22,9 @@ import {
   DISPLAY_POWER_MODE_OFF,
   DISPLAY_POWER_MODE_ON,
   TEXT_MAX_LENGTH,
-} from "./constants.js"
-
-export {
-  ACTION_DOWN,
-  ACTION_UP,
-  ACTION_MOVE,
-  KEYCODE_HOME,
-  KEYCODE_BACK,
-  KEYCODE_MENU,
-  KEYCODE_ENTER,
-  KEYCODE_VOLUME_UP,
-  KEYCODE_VOLUME_DOWN,
-  KEYCODE_POWER,
+  MAX_JPEG_BUFFER_SIZE,
+  JPEG_SOI,
+  JPEG_EOI,
 } from "./constants.js"
 
 export function serializeInjectKeycode(
@@ -195,6 +185,7 @@ export interface ScrcpySessionOptions {
 export interface ScrcpySession {
   serial: string
   controlSocket: net.Socket | null
+  videoSocket: net.Socket | null
   videoProcess: ChildProcess | null
   frameBuffer: Buffer | null
   screenSize: { width: number; height: number }
@@ -209,6 +200,133 @@ export function getSession(serial: string): ScrcpySession | undefined {
 export function hasActiveSession(serial: string): boolean {
   const session = sessions.get(serial)
   return session !== undefined && session.controlSocket !== null && !session.controlSocket.destroyed
+}
+
+export function getLatestFrame(serial: string): Buffer | null {
+  const session = sessions.get(serial)
+  return session?.frameBuffer ?? null
+}
+
+const findFfmpeg = (): string => {
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return process.env.FFMPEG_PATH
+  }
+  return "ffmpeg"
+}
+
+function startVideoStream(session: ScrcpySession, videoSocket: net.Socket): void {
+  const ffmpegPath = findFfmpeg()
+  
+  const ffmpeg = spawn(ffmpegPath, [
+    "-f", "h264",
+    "-i", "pipe:0",
+    "-f", "image2pipe",
+    "-vcodec", "mjpeg",
+    "-q:v", "5",
+    "-vf", "fps=30",
+    "pipe:1",
+  ])
+
+  session.videoProcess = ffmpeg
+  session.videoSocket = videoSocket
+
+  let jpegBuffer = Buffer.alloc(0)
+
+  ffmpeg.stdout?.on("data", (chunk: Buffer) => {
+    jpegBuffer = Buffer.concat([jpegBuffer, chunk])
+
+    if (jpegBuffer.length > MAX_JPEG_BUFFER_SIZE) {
+      console.error(`[scrcpy] [${session.serial}] JPEG buffer exceeded max size, resetting`)
+      jpegBuffer = Buffer.alloc(0)
+      return
+    }
+    
+    let soiIdx = -1
+    for (let i = 0; i < jpegBuffer.length - 1; i++) {
+      if (jpegBuffer.readUInt16BE(i) === JPEG_SOI) {
+        soiIdx = i
+        break
+      }
+    }
+    
+    if (soiIdx === -1) {
+      return
+    }
+    
+    if (soiIdx > 0) {
+      jpegBuffer = jpegBuffer.subarray(soiIdx)
+    }
+    
+    while (jpegBuffer.length > 4) {
+      let eoiIdx = -1
+      for (let i = 2; i < jpegBuffer.length - 1; i++) {
+        if (jpegBuffer.readUInt16BE(i) === JPEG_EOI) {
+          eoiIdx = i
+          break
+        }
+      }
+      
+      if (eoiIdx === -1) {
+        break
+      }
+      
+      const frame = jpegBuffer.subarray(0, eoiIdx + 2)
+      session.frameBuffer = Buffer.from(frame)
+      jpegBuffer = jpegBuffer.subarray(eoiIdx + 2)
+    }
+  })
+
+  ffmpeg.stderr?.on("data", (data: Buffer) => {
+    console.error(`[scrcpy] [${session.serial}] ffmpeg stderr: ${data.toString().trim()}`)
+  })
+
+  ffmpeg.on("error", (err: Error) => {
+    console.error(`[scrcpy] ffmpeg error for ${session.serial}:`, err.message)
+    if (session.videoSocket) {
+      session.videoSocket.destroy()
+      session.videoSocket = null
+    }
+    session.frameBuffer = null
+    session.videoProcess = null
+  })
+
+  ffmpeg.on("exit", (code: number | null) => {
+    session.videoProcess = null
+    if (code !== 0 && code !== null) {
+      console.error(`[scrcpy] ffmpeg exited with code ${code} for ${session.serial}`)
+      if (session.videoSocket) {
+        session.videoSocket.destroy()
+        session.videoSocket = null
+      }
+      session.frameBuffer = null
+    }
+  })
+
+  videoSocket.on("error", (err: Error) => {
+    console.error(`[scrcpy] Video socket error for ${session.serial}:`, err.message)
+    session.videoSocket = null
+  })
+
+  videoSocket.on("close", () => {
+    session.videoSocket = null
+  })
+
+  if (ffmpeg.stdin) {
+    ffmpeg.stdin.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EPIPE") {
+        console.error(`[scrcpy] ffmpeg stdin EPIPE for ${session.serial}`)
+      } else {
+        console.error(`[scrcpy] ffmpeg stdin error for ${session.serial}:`, err.message)
+      }
+      videoSocket.unpipe()
+    })
+
+    ffmpeg.stdin.on("close", () => {
+      videoSocket.unpipe()
+    })
+
+    videoSocket.pipe(ffmpeg.stdin)
+  }
 }
 
 export function findScrcpyServer(): string | null {
@@ -362,7 +480,10 @@ const receiveDeviceMeta = async (
       clearTimeout(timer)
       socket.off("data", onData)
       socket.off("error", onError)
-      reject(new Error(`Socket error while receiving device metadata on port ${port}`, { cause: err }))
+      reject(new Error(
+        `Socket error receiving device metadata on port ${port}`,
+        { cause: err }
+      ))
     }
 
     socket.on("data", onData)
@@ -437,7 +558,8 @@ export async function startSession(
 
     session = {
       serial: s,
-      controlSocket: socket,
+      controlSocket: null,
+      videoSocket: socket,
       videoProcess: null,
       frameBuffer: null,
       screenSize,
@@ -445,13 +567,49 @@ export async function startSession(
 
     sessions.set(s, session)
 
-    socket.on("close", () => {
-      session!.controlSocket = null
+    startVideoStream(session, socket)
+
+    let controlSocket: net.Socket | null = null
+    let lastControlError: Error | null = null
+    const controlConnectDeadline = Date.now() + 5000
+    while (Date.now() < controlConnectDeadline) {
+      try {
+        const remaining = controlConnectDeadline - Date.now()
+        if (remaining <= 0) break
+        controlSocket = await connectToServer(port, remaining)
+        break
+      } catch (err) {
+        lastControlError = err as Error
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+    }
+
+    if (!controlSocket) {
+      socket.destroy()
+      if (session.videoProcess) {
+        session.videoProcess.kill()
+        session.videoProcess = null
+      }
+      sessions.delete(s)
+      throw new Error(
+        `Failed to connect control socket on port ${port} for device ${s} within timeout`,
+        { cause: lastControlError }
+      )
+    }
+
+    session.controlSocket = controlSocket
+
+    controlSocket.on("close", () => {
+      if (session) {
+        session.controlSocket = null
+      }
     })
 
-    socket.on("error", (err) => {
+    controlSocket.on("error", (err) => {
       console.error(`[scrcpy] Control socket error for ${s}:`, err.message)
-      session!.controlSocket = null
+      if (session) {
+        session.controlSocket = null
+      }
     })
 
     return session
@@ -476,6 +634,11 @@ export async function stopSession(serial: string): Promise<void> {
 
   if (!session) {
     return
+  }
+
+  if (session.videoSocket) {
+    session.videoSocket.destroy()
+    session.videoSocket = null
   }
 
   if (session.controlSocket) {
