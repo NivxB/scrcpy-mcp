@@ -1,6 +1,6 @@
 {
   "name": "scrcpy-mcp",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "mcpName": "io.github.JuanCF/scrcpy-mcp",
   "description": "MCP server for Android device control via ADB and scrcpy — gives AI agents vision and control over Android devices",
   "keywords": [
@@ -40,8 +40,7 @@
     "test": "vitest run",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "prepublishOnly": "npm run build",
-    "publish:smithery": "npx smithery@4.1.1 mcp publish https://github.com/JuanCF/scrcpy-mcp -n @JuanCF/scrcpy-mcp"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
